@@ -7,7 +7,16 @@
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover"
     />
     <title>My LIFF app</title>
-    <link rel="stylesheet" href="css/style.css" media="all" />
+    <!-- Use here for production -->
+    <!-- <link rel="stylesheet" href="css/style.css" media="all" /> -->
+    <!-- Use here for development -->
+    <script>
+      document.write(
+        '<link rel="stylesheet" href="css/style.css?cache=' +
+          new Date().getTime() +
+          '" media="all" />'
+      );
+    </script>
   </head>
   <body>
     <p id="os"><b>OS:</b></p>
@@ -28,9 +37,6 @@
     <p id="friendship"><b>isFriendship:</b></p>
     <p id="scanCode"><b>Code:</b></p>
     <p id="isLoggedIn"><b>isLoggedIn:</b></p>
-    <p id="universalLink1"><b>Universal Link:</b></p>
-    <p id="universalLink2"><b>Universal Link with Query params:</b></p>
-    <p><a href="liff/path/?param=9">Link to Path</a></p>
 
     <button id="btnMsg" onclick="sendMsg()">Send Message</button>
     <button id="btnShare" onclick="shareMsg()">Share Target Picker</button>
@@ -49,21 +55,52 @@
     <script>
       function createUniversalLink() {}
 
-      async function shareMsg() {}
+      async function shareMsg() {
+        await liff.shareTargetPicker([
+          {
+            type: "text",
+            text: "This message was sent by ShareTargetPicker",
+          },
+        ]);
+      }
 
-      function logOut() {}
+      function logOut() {
+        liff.logout();
+        windows.location.reload();
+      }
 
-      function closed() {}
+      function closed() {
+        liff.closeWindow();
+      }
 
       async function scanCode() {}
 
-      function openWindow() {}
+      function openWindow() {
+        liff.openWindow({
+          url: "https://line.me",
+          external: true,
+        });
+      }
 
-      async function getFriendship() {}
+      async function getFriendship() {
+        const friend = await liff.getFriendship();
+        document.getElementById("friendship").append(friend.friendFlag);
+        if (!friend.friendFlag) {
+          if (confirm("คุณยังไม่ได้เพิ่ม Bot เป็นเพื่อน จะเพิ่มเลยไหม?")) {
+            window.location = "https://lin.ee/lpznOro";
+          }
+        }
+      }
 
       async function sendMsg() {}
 
-      function getContext() {}
+      function getContext() {
+        document.getElementById("type").append(liff.getContext().type);
+        document.getElementById("viewType").append(liff.getContext().viewType);
+        document.getElementById("utouId").append(liff.getContext().utouId);
+        document.getElementById("roomId").append(liff.getContext().roomId);
+        document.getElementById("groupId").append(liff.getContext().groupId);
+      }
 
       async function getUserProfile() {
         const profile = await liff.getProfile();
@@ -71,6 +108,9 @@
         document.getElementById("userId").append(profile.userId);
         document.getElementById("statusMessage").append(profile.statusMessage);
         document.getElementById("displayName").append(profile.displayName);
+        document
+          .getElementById("decodedIDToken")
+          .append(liff.getDecodedIDToken().email);
       }
 
       function getEnvironment() {
@@ -90,11 +130,15 @@
 
       async function main() {
         await liff.init({ liffId: "2006915711-nZ7w2bYk" });
-        getEnvironment();
-        getUserProfile();
-        // getContext()
-        // getFriendship()
-        // createUniversalLink()
+        document.getElementById("isLoggedIn").append(liff.isLoggedIn());
+        if (liff.isLoggedIn()) {
+          getEnvironment();
+          getUserProfile();
+          getContext();
+          getFriendship();
+        } else {
+          liff.login();
+        }
       }
       main();
     </script>
